@@ -14,7 +14,9 @@
     "prebuild": "expo prebuild",
     "run:android": "expo run:android",
     "run:ios": "expo run:ios",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "lint": "expo lint",
+    "format": "prettier --write ."
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "2.2.0",
@@ -42,6 +44,10 @@
   "devDependencies": {
     "@types/react": "~19.1.10",
     "dotenv": "^17.3.1",
+    "eslint": "^9.39.4",
+    "eslint-config-expo": "^55.0.0",
+    "eslint-config-prettier": "^10.1.8",
+    "prettier": "^3.8.1",
     "typescript": "~5.9.2"
   },
   "private": true

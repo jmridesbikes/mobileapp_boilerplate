@@ -1,13 +1,28 @@
 import { useRouter } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { env } from '@/src/config/env';
 import { isExpoGo } from '@/src/lib/runtimeEnv';
 
 /**
- * RevenueCat dashboard paywall (templates / Paywalls v2). Requires a native build with native modules.
+ * RevenueCat dashboard paywall when `EXPO_PUBLIC_SUBSCRIPTION_MODE=revenuecat`. Requires a native dev/build (not Expo Go).
  */
 export function PaywallContent() {
   const router = useRouter();
+
+  if (env.subscriptionMode !== 'revenuecat') {
+    return (
+      <View style={styles.box}>
+        <Text style={styles.title}>Subscriptions</Text>
+        <Text style={styles.body}>
+          Paywall is only used when `EXPO_PUBLIC_SUBSCRIPTION_MODE=revenuecat`. The default base skips subscription gating.
+        </Text>
+        <Pressable onPress={() => router.replace('/')} style={styles.back}>
+          <Text style={styles.backLabel}>Back</Text>
+        </Pressable>
+      </View>
+    );
+  }
 
   if (isExpoGo()) {
     return (
@@ -24,6 +39,7 @@ export function PaywallContent() {
     );
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-require-imports -- optional native UI; not bundled in Expo Go paths
   const RevenueCatUI = require('react-native-purchases-ui').default;
 
   return (

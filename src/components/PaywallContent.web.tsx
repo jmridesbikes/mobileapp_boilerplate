@@ -1,13 +1,24 @@
 import { StyleSheet, Text, View } from 'react-native';
 
+import { env } from '@/src/config/env';
+
 /** In-app purchases are not available in the browser; use a native build on a device or emulator. */
 export function PaywallContent() {
+  if (env.subscriptionMode !== 'revenuecat') {
+    return (
+      <View style={styles.box}>
+        <Text style={styles.title}>Subscriptions</Text>
+        <Text style={styles.body}>Subscription gating is disabled unless you enable RevenueCat mode — see RECIPES.md.</Text>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.box}>
       <Text style={styles.title}>Subscriptions</Text>
       <Text style={styles.body}>
-        RevenueCat runs in native builds. Use `npx expo run:android`, `npx expo run:ios`, or EAS. Expo Go can open this app
-        for UI-only checks, but IAP requires a dev client build.
+        RevenueCat runs in native builds. Use `npx expo run:android`, `npx expo run:ios`, or EAS. Expo Go can open this app for UI-only
+        checks, but IAP requires a dev client build.
       </Text>
     </View>
   );

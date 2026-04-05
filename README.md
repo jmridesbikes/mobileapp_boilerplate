@@ -1,69 +1,53 @@
-# Mobile app boilerplate (Expo + RevenueCat)
+# Mobile app boilerplate (Expo, vendor-neutral core)
 
-Expo Router app with onboarding, a RevenueCat paywall (native UI), settings (restore, manage subscription, trials status), and entitlement gating. **Use a native build** (`prebuild` + `run:android` / `run:ios` or EAS) for in-app purchases — not Expo Go.
+Expo Router (SDK 54) shell: TypeScript strict, composable **gate** at [`app/index.tsx`](app/index.tsx), onboarding, optional placeholder auth, optional RevenueCat paywall, and tabs (home + settings). **Defaults:** no login (`EXPO_PUBLIC_AUTH_MODE=none`) and **no** subscription gating (`EXPO_PUBLIC_SUBSCRIPTION_MODE=none`) so you can fork and add your product without ripping out a baked-in backend.
 
-## Your next steps (recommended order)
+## Defaults vs optional modes
 
-1. **Tooling** — Install [Node.js](https://nodejs.org/) **≥ 20.19.4** (see `engines` in `package.json`). On Windows, use Android Studio’s emulator or a USB device for IAP; Xcode/iOS Simulator needs macOS.
-2. **Install and env** — Run `npm install`, copy `.env.example` to `.env`, and paste your RevenueCat **public** API keys (Project settings → API keys).
-3. **Rename the app** — In `app.config.js`, set `name`, `slug`, `ios.bundleIdentifier`, and `android.package` for your real product. Create matching iOS/Android apps in RevenueCat with the same bundle IDs.
-4. **Stores + RevenueCat** — In App Store Connect and Play Console, create subscription products (with free trials / intro offers if you want). In RevenueCat, create an **entitlement** (e.g. `pro`), attach those products, and set `ENTITLEMENT_ID` in `src/constants/subscription.ts` to match. Optionally design a **Paywall** in the RevenueCat dashboard for `RevenueCatUI.Paywall`.
-5. **Native project** — Run `npm run prebuild` once to generate `android/` / `ios/`, then `npm run run:android` on Windows. For iOS without a Mac, use **EAS Build** (after `eas login` and `eas init`).
-6. **Native app** — After `prebuild` + `run:android` (or iOS), start Metro with `npm start` and open the **installed app** on the device/emulator (not Expo Go). Complete onboarding; test purchase/restore in sandbox.
+| Env | Meaning |
+|-----|--------|
+| `EXPO_PUBLIC_AUTH_MODE=none` (default) | Skip auth; gate goes onboarding → main app. |
+| `EXPO_PUBLIC_AUTH_MODE=required` | Redirect to [`app/(auth)/login`](app/(auth)/login.tsx) until you wire a real provider (dev bypass available in `__DEV__`). |
+| `EXPO_PUBLIC_SUBSCRIPTION_MODE=none` (default) | No paywall; entitlement check always passes. |
+| `EXPO_PUBLIC_SUBSCRIPTION_MODE=revenuecat` | Enable RevenueCat + paywall gate; set public API keys in `.env`. |
 
-**Windows (PowerShell) copy env file:** `Copy-Item .env.example .env`
+See [RECIPES.md](RECIPES.md) for RevenueCat, auth backends, and webhooks.
 
-**Useful scripts:** `npm start` (Metro), `npm run start:go` (Expo Go), `npm run typecheck`, `npm run prebuild`, `npm run run:android` / `npm run run:ios`.
+## Requirements
 
-## Expo Go vs native build (RevenueCat)
-
-| Environment | In-app purchases |
-|-------------|-------------------|
-| **Expo Go** (`npm run start:go`) | Not supported. RevenueCat uses native code that is not bundled inside the Expo Go app. The project loads in Expo Go for **UI-only** smoke tests; subscription buttons are stubbed. |
-| **Native build** (`npm run run:android` / `run:ios` or EAS) | Supported. Install that build, then run `npm start` and open the **installed app** (not Expo Go). |
-
-Default script is **`npm start`** (`expo start`), which does **not** force Expo Go. Use **`npm run start:go`** only if you intentionally want the Expo Go app; expect limited functionality for this repo.
-
-## Troubleshooting
-
-- **“Cannot find native module” / crash on launch in Expo Go** — Expected if anything still imported `react-native-purchases` at the top level. This repo avoids that in Expo Go; use a **native build** and `npm start` with the installed app for full native modules. If you still use Expo Go, pull the latest changes and avoid `expo start --go` as the only workflow.
-- **Paywall is empty or errors** — Ensure `.env` has valid RevenueCat public keys and store products are linked to your entitlement in the RevenueCat dashboard.
-- **Stuck on paywall in a dev build** — Confirm sandbox testers / license testers and that the entitlement id matches `src/constants/subscription.ts`.
+- [Node.js](https://nodejs.org/) **≥ 20.19.4** (see `engines` in `package.json`).
 
 ## Quick start
 
 ```bash
 npm install
-cp .env.example .env
-# Fill EXPO_PUBLIC_REVENUECAT_IOS_KEY and EXPO_PUBLIC_REVENUECAT_ANDROID_KEY
+Copy-Item .env.example .env   # PowerShell; or: cp .env.example .env
 npm start
 ```
 
-After adding native modules, create native projects once:
-
-```bash
-npm run prebuild
-npm run run:android
-# iOS: macOS or EAS Build — see below
-```
-
-## New app checklist
-
-1. **Identifiers** — In [app.config.js](app.config.js), set `ios.bundleIdentifier` and `android.package` (and the RevenueCat app entries) for your product.
-2. **Entitlement** — In [src/constants/subscription.ts](src/constants/subscription.ts), set `ENTITLEMENT_ID` to match your RevenueCat dashboard entitlement (default: `pro`).
-3. **Stores** — Create subscription products and free trials / intro offers in App Store Connect and Google Play Console; link them in RevenueCat and attach to the same entitlement.
-4. **RevenueCat** — Create a project, add iOS/Android apps, paste **public** API keys into `.env` (see [.env.example](.env.example)). Configure a **Paywall** in the dashboard if you use `RevenueCatUI.Paywall`.
-5. **EAS** — Run `eas init`, then `eas build --profile development` (internal) or `production` for store builds. iOS builds can run on EAS without a local Mac.
-6. **Legal links** — Replace placeholder URLs in [app/(app)/settings.tsx](app/(app)/settings.tsx).
+Useful scripts: `npm run typecheck`, `npm run lint`, `npm run prebuild`, `npm run run:android` / `npm run run:ios`.
 
 ## Flow
 
-On launch, `app/index.tsx` sends users to onboarding (first run), then the paywall if the entitlement is inactive, otherwise the main tabs (home + settings).
+Root [`app/index.tsx`](app/index.tsx): **optional auth** → **onboarding** → **optional paywall** (RevenueCat only) → **main tabs**.
+
+## RevenueCat / native IAP (optional)
+
+If `EXPO_PUBLIC_SUBSCRIPTION_MODE=revenuecat`, use a **native build** (`prebuild` + `run:android` / `run:ios` or EAS) for real IAP — **not** Expo Go (see [RECIPES.md](RECIPES.md)).
+
+| Environment | IAP when RevenueCat enabled |
+|-------------|-----------------------------|
+| **Expo Go** | Not supported; UI-only smoke tests. |
+| **Dev / store build** | Install the build, run `npm start`, open the **installed** app. |
+
+## New app checklist
+
+1. **Identifiers** — In [app.config.js](app.config.js), set `name`, `slug`, `ios.bundleIdentifier`, `android.package`.
+2. **Modes** — Set `EXPO_PUBLIC_AUTH_MODE` / `EXPO_PUBLIC_SUBSCRIPTION_MODE` in `.env` as needed.
+3. **RevenueCat (if used)** — Entitlement id in [src/constants/subscription.ts](src/constants/subscription.ts); keys in `.env`; products in App Store Connect / Play Console.
+4. **EAS** — `eas init`, then `eas build` (see [eas.json](eas.json)).
+5. **Legal links** — Replace placeholder URLs in [app/(app)/settings.tsx](app/(app)/settings.tsx).
 
 ## Windows vs iOS
 
-Daily development on Windows: Android emulator or device with a native build. For iOS, use a Mac with Xcode or **EAS Build** and TestFlight.
-
-## Node
-
-This template targets a current Node LTS (see Expo’s requirements). Use Node **≥ 20.19.4** if you see engine warnings from the toolchain.
+Daily development on Windows: Android emulator or device. For iOS store builds without a Mac, use **EAS Build** and TestFlight.

@@ -1,8 +1,16 @@
-import { usePurchasesState } from '@/src/providers/PurchasesProvider';
+import { useSubscriptionState } from '@/src/providers/SubscriptionProvider';
 
 /**
- * Subscribes to RevenueCat `CustomerInfo` via `PurchasesProvider` (listener + initial fetch).
+ * Subscription / entitlement state (RevenueCat when enabled, otherwise noop).
+ * @deprecated Prefer `useSubscriptionState` for new code.
  */
 export function useCustomerInfo() {
-  return usePurchasesState();
+  const s = useSubscriptionState();
+  return {
+    customerInfo: s.customerInfo,
+    isReady: s.isReady,
+    hasEntitlement: s.hasEntitlement,
+    isExpoGo: s.isExpoGo,
+    mode: s.mode,
+  };
 }

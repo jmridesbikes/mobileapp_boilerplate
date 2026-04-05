@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { Alert, Platform, Pressable, StyleSheet, Text } from 'react-native';
 
 import Colors from '@/src/constants/colors';
@@ -18,20 +18,9 @@ function subscriptionManagementUrl(): string {
 
 export function SettingsSubscriptionSection() {
   const router = useRouter();
-  const { customerInfo, hasEntitlement, isExpoGo } = useCustomerInfo();
+  const { customerInfo, hasEntitlement, isExpoGo, mode } = useCustomerInfo();
   const [busy, setBusy] = useState(false);
   const colorScheme = useColorScheme() ?? 'light';
-
-  const entitlement = customerInfo?.entitlements.active[ENTITLEMENT_ID];
-  const statusLabel = (() => {
-    if (!customerInfo) return 'Not loaded';
-    if (entitlement?.isActive) {
-      if (entitlement.periodType === 'TRIAL') return 'Trial active';
-      if (entitlement.periodType === 'INTRO') return 'Intro pricing';
-      return 'Active';
-    }
-    return hasEntitlement ? 'Active' : 'Not subscribed';
-  })();
 
   const onRestore = useCallback(async () => {
     setBusy(true);
@@ -47,6 +36,7 @@ export function SettingsSubscriptionSection() {
   }, [router]);
 
   const onManageSubscriptions = useCallback(async () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- optional native UI; avoids loading in Expo Go
     const RevenueCatUI = require('react-native-purchases-ui').default;
     try {
       await RevenueCatUI.presentCustomerCenter();
@@ -55,15 +45,38 @@ export function SettingsSubscriptionSection() {
     }
   }, []);
 
+  const entitlement = customerInfo?.entitlements.active[ENTITLEMENT_ID];
+  const statusLabel = useMemo(() => {
+    if (!customerInfo) return 'Not loaded';
+    if (entitlement?.isActive) {
+      if (entitlement.periodType === 'TRIAL') return 'Trial active';
+      if (entitlement.periodType === 'INTRO') return 'Intro pricing';
+      return 'Active';
+    }
+    return hasEntitlement ? 'Active' : 'Not subscribed';
+  }, [customerInfo, entitlement, hasEntitlement]);
+
   const primaryColor = Colors[colorScheme].primary;
+
+  if (mode === 'none') {
+    return (
+      <>
+        <Text style={styles.section}>Subscription</Text>
+        <Text style={styles.row}>
+          In-app purchases are off in the default base. Set EXPO_PUBLIC_SUBSCRIPTION_MODE=revenuecat and add RevenueCat keys — see
+          RECIPES.md.
+        </Text>
+      </>
+    );
+  }
 
   if (isExpoGo) {
     return (
       <>
         <Text style={styles.section}>Subscription</Text>
         <Text style={styles.row}>
-          Running in Expo Go: in-app purchases and RevenueCat are disabled. Use a native build to test IAP (for example
-          npm run run:android or eas build --profile development).
+          Running in Expo Go: in-app purchases and RevenueCat are disabled. Use a native build to test IAP (for example npm run
+          run:android or eas build --profile development).
         </Text>
       </>
     );

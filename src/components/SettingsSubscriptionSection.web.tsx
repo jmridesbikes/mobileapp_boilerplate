@@ -1,6 +1,17 @@
 import { StyleSheet, Text } from 'react-native';
 
+import { env } from '@/src/config/env';
+
 export function SettingsSubscriptionSection() {
+  if (env.subscriptionMode !== 'revenuecat') {
+    return (
+      <>
+        <Text style={styles.section}>Subscription</Text>
+        <Text style={styles.row}>Web preview — subscription/IAP are optional; enable RevenueCat mode for native IAP (see RECIPES.md).</Text>
+      </>
+    );
+  }
+
   return (
     <>
       <Text style={styles.section}>Subscription</Text>

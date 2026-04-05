@@ -8,20 +8,16 @@ import {
   fetchCustomerInfo,
   hasActiveEntitlement,
   subscribeCustomerInfo,
-} from '@/src/lib/purchases';
+} from '@/src/integrations/revenuecat/purchases';
 import { isExpoGo } from '@/src/lib/runtimeEnv';
+import type { SubscriptionState } from '@/src/providers/subscriptionTypes';
 
-type PurchasesContextValue = {
-  customerInfo: CustomerInfo | null;
-  isReady: boolean;
-  hasEntitlement: boolean;
-  /** True in Expo Go — RevenueCat native modules are not loaded; IAP is unavailable. */
-  isExpoGo: boolean;
-};
+const RevenueCatSubscriptionContext = createContext<SubscriptionState | null>(null);
 
-const PurchasesContext = createContext<PurchasesContextValue | null>(null);
-
-export function PurchasesProvider({ children }: { children: React.ReactNode }) {
+/**
+ * RevenueCat-backed subscription state. Mount only when `EXPO_PUBLIC_SUBSCRIPTION_MODE=revenuecat`.
+ */
+export function RevenueCatSubscriptionProvider({ children }: { children: React.ReactNode }) {
   const [customerInfo, setCustomerInfo] = useState<CustomerInfo | null>(null);
   const [isReady, setIsReady] = useState(false);
   const expoGo = useMemo(() => isExpoGo(), []);
@@ -52,7 +48,7 @@ export function PurchasesProvider({ children }: { children: React.ReactNode }) {
           if (!cancelled) setCustomerInfo(next);
         });
       } catch (e) {
-        console.warn('[PurchasesProvider] configure/getCustomerInfo failed', e);
+        console.warn('[RevenueCatSubscriptionProvider] configure/getCustomerInfo failed', e);
       } finally {
         if (!cancelled) setIsReady(true);
       }
@@ -75,17 +71,25 @@ export function PurchasesProvider({ children }: { children: React.ReactNode }) {
   }, [customerInfo, expoGo]);
 
   const value = useMemo(
-    () => ({ customerInfo, isReady, hasEntitlement, isExpoGo: expoGo }),
+    (): SubscriptionState => ({
+      mode: 'revenuecat',
+      customerInfo,
+      isReady,
+      hasEntitlement,
+      isExpoGo: expoGo,
+    }),
     [customerInfo, isReady, hasEntitlement, expoGo]
   );
 
-  return <PurchasesContext.Provider value={value}>{children}</PurchasesContext.Provider>;
+  return (
+    <RevenueCatSubscriptionContext.Provider value={value}>{children}</RevenueCatSubscriptionContext.Provider>
+  );
 }
 
-export function usePurchasesState(): PurchasesContextValue {
-  const ctx = useContext(PurchasesContext);
+export function useRevenueCatSubscriptionContext(): SubscriptionState {
+  const ctx = useContext(RevenueCatSubscriptionContext);
   if (!ctx) {
-    throw new Error('usePurchasesState must be used within PurchasesProvider');
+    throw new Error('useRevenueCatSubscriptionContext must be used within RevenueCatSubscriptionProvider');
   }
   return ctx;
 }

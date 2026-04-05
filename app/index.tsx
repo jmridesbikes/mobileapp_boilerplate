@@ -1,14 +1,16 @@
 import { Redirect } from 'expo-router';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 
-import { useCustomerInfo } from '@/src/hooks/useCustomerInfo';
+import { useAuth } from '@/src/providers/AuthProvider';
+import { useSubscriptionState } from '@/src/providers/SubscriptionProvider';
 import { useOnboardingStatus } from '@/src/hooks/useOnboardingStatus';
 
 export default function GateScreen() {
   const { completed, hydrated } = useOnboardingStatus();
-  const { hasEntitlement, isReady } = useCustomerInfo();
+  const { isReady: subReady, hasEntitlement, mode: subMode } = useSubscriptionState();
+  const { isReady: authReady, isAuthenticated, authMode } = useAuth();
 
-  if (!hydrated || !isReady) {
+  if (!hydrated || !subReady || !authReady) {
     return (
       <View style={styles.centered}>
         <ActivityIndicator size="large" />
@@ -16,11 +18,15 @@ export default function GateScreen() {
     );
   }
 
+  if (authMode === 'required' && !isAuthenticated) {
+    return <Redirect href="/(auth)/login" />;
+  }
+
   if (!completed) {
     return <Redirect href="/(onboarding)" />;
   }
 
-  if (!hasEntitlement) {
+  if (subMode === 'revenuecat' && !hasEntitlement) {
     return <Redirect href="/(paywall)" />;
   }
 
