@@ -1,12 +1,13 @@
 import { StyleSheet, Text, View } from 'react-native';
 
-/** In-app purchases are not available in the browser; use Android/iOS dev client or EAS builds. */
+/** In-app purchases are not available in the browser; use a development build on a device or emulator. */
 export function PaywallContent() {
   return (
     <View style={styles.box}>
       <Text style={styles.title}>Subscriptions</Text>
       <Text style={styles.body}>
-        RevenueCat paywalls run in native builds. Use `npx expo run:android`, `npx expo run:ios`, or EAS — not Expo Go.
+        RevenueCat runs in native builds. Use `npx expo run:android`, `npx expo run:ios`, or EAS. Expo Go can open this app
+        for UI-only checks, but IAP requires a dev client build.
       </Text>
     </View>
   );

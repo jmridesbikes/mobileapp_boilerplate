@@ -1,14 +1,22 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { Platform } from 'react-native';
-import Purchases, { type CustomerInfo } from 'react-native-purchases';
+import type { CustomerInfo } from 'react-native-purchases';
 
-import { configurePurchases, hasActiveEntitlement } from '@/src/lib/purchases';
 import { ENTITLEMENT_ID } from '@/src/constants/subscription';
+import {
+  configurePurchases,
+  fetchCustomerInfo,
+  hasActiveEntitlement,
+  subscribeCustomerInfo,
+} from '@/src/lib/purchases';
+import { isExpoGo } from '@/src/lib/runtimeEnv';
 
 type PurchasesContextValue = {
   customerInfo: CustomerInfo | null;
   isReady: boolean;
   hasEntitlement: boolean;
+  /** True in Expo Go — RevenueCat native modules are not loaded; IAP is unavailable. */
+  isExpoGo: boolean;
 };
 
 const PurchasesContext = createContext<PurchasesContextValue | null>(null);
@@ -16,6 +24,7 @@ const PurchasesContext = createContext<PurchasesContextValue | null>(null);
 export function PurchasesProvider({ children }: { children: React.ReactNode }) {
   const [customerInfo, setCustomerInfo] = useState<CustomerInfo | null>(null);
   const [isReady, setIsReady] = useState(false);
+  const expoGo = useMemo(() => isExpoGo(), []);
 
   useEffect(() => {
     if (Platform.OS === 'web') {
@@ -23,11 +32,13 @@ export function PurchasesProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
+    if (expoGo) {
+      setIsReady(true);
+      return;
+    }
+
     let cancelled = false;
-    let listenerAdded = false;
-    const onCustomerInfoUpdate = (next: CustomerInfo) => {
-      setCustomerInfo(next);
-    };
+    let unsubscribe: (() => void) | undefined;
 
     (async () => {
       try {
@@ -35,10 +46,11 @@ export function PurchasesProvider({ children }: { children: React.ReactNode }) {
         if (!configured) {
           return;
         }
-        const info = await Purchases.getCustomerInfo();
+        const info = await fetchCustomerInfo();
         if (!cancelled) setCustomerInfo(info);
-        Purchases.addCustomerInfoUpdateListener(onCustomerInfoUpdate);
-        listenerAdded = true;
+        unsubscribe = subscribeCustomerInfo((next) => {
+          if (!cancelled) setCustomerInfo(next);
+        });
       } catch (e) {
         console.warn('[PurchasesProvider] configure/getCustomerInfo failed', e);
       } finally {
@@ -48,23 +60,23 @@ export function PurchasesProvider({ children }: { children: React.ReactNode }) {
 
     return () => {
       cancelled = true;
-      if (listenerAdded) {
-        Purchases.removeCustomerInfoUpdateListener(onCustomerInfoUpdate);
-      }
+      unsubscribe?.();
     };
-  }, []);
+  }, [expoGo]);
 
   const hasEntitlement = useMemo(() => {
     if (Platform.OS === 'web') {
-      // Web: no Store / Play IAP — treat as entitled so you can exercise UI; use a dev build for real IAP.
+      return true;
+    }
+    if (expoGo) {
       return true;
     }
     return hasActiveEntitlement(customerInfo, ENTITLEMENT_ID);
-  }, [customerInfo]);
+  }, [customerInfo, expoGo]);
 
   const value = useMemo(
-    () => ({ customerInfo, isReady, hasEntitlement }),
-    [customerInfo, isReady, hasEntitlement]
+    () => ({ customerInfo, isReady, hasEntitlement, isExpoGo: expoGo }),
+    [customerInfo, isReady, hasEntitlement, expoGo]
   );
 
   return <PurchasesContext.Provider value={value}>{children}</PurchasesContext.Provider>;

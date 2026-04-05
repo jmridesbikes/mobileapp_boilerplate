@@ -2,13 +2,12 @@ import { useRouter } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import { useCallback, useState } from 'react';
 import { Alert, Platform, Pressable, StyleSheet, Text } from 'react-native';
-import RevenueCatUI from 'react-native-purchases-ui';
 
+import Colors from '@/src/constants/colors';
 import { ENTITLEMENT_ID } from '@/src/constants/subscription';
 import { useCustomerInfo } from '@/src/hooks/useCustomerInfo';
-import { restorePurchases } from '@/src/lib/purchases';
-import Colors from '@/src/constants/colors';
 import { useColorScheme } from '@/src/hooks/useColorScheme';
+import { restorePurchases } from '@/src/lib/purchases';
 
 function subscriptionManagementUrl(): string {
   if (Platform.OS === 'ios') {
@@ -19,7 +18,7 @@ function subscriptionManagementUrl(): string {
 
 export function SettingsSubscriptionSection() {
   const router = useRouter();
-  const { customerInfo, hasEntitlement } = useCustomerInfo();
+  const { customerInfo, hasEntitlement, isExpoGo } = useCustomerInfo();
   const [busy, setBusy] = useState(false);
   const colorScheme = useColorScheme() ?? 'light';
 
@@ -48,6 +47,7 @@ export function SettingsSubscriptionSection() {
   }, [router]);
 
   const onManageSubscriptions = useCallback(async () => {
+    const RevenueCatUI = require('react-native-purchases-ui').default;
     try {
       await RevenueCatUI.presentCustomerCenter();
     } catch {
@@ -56,6 +56,18 @@ export function SettingsSubscriptionSection() {
   }, []);
 
   const primaryColor = Colors[colorScheme].primary;
+
+  if (isExpoGo) {
+    return (
+      <>
+        <Text style={styles.section}>Subscription</Text>
+        <Text style={styles.row}>
+          Running in Expo Go: in-app purchases and RevenueCat are disabled. Use a development build to test IAP (for example
+          npm run run:android or eas build --profile development).
+        </Text>
+      </>
+    );
+  }
 
   return (
     <>

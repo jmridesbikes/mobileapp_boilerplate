@@ -13,7 +13,22 @@ Expo Router app with onboarding, a RevenueCat paywall (native UI), settings (res
 
 **Windows (PowerShell) copy env file:** `Copy-Item .env.example .env`
 
-**Useful scripts:** `npm run start:dev` (Metro + dev client), `npm run typecheck`, `npm run prebuild`, `npm run run:android` / `npm run run:ios`.
+**Useful scripts:** `npm start` (Metro; choose dev client in the UI), `npm run start:dev` (expects a dev client), `npm run typecheck`, `npm run prebuild`, `npm run run:android` / `npm run run:ios`.
+
+## Expo Go vs development build (RevenueCat)
+
+| Environment | In-app purchases |
+|-------------|-------------------|
+| **Expo Go** (`npm run start:go`) | Not supported. RevenueCat uses native code that is not bundled inside the Expo Go app. The project loads in Expo Go for **UI-only** smoke tests; subscription buttons are stubbed. |
+| **Development build** (`expo-dev-client`, e.g. `npm run run:android` or EAS `development` profile) | Supported. Install that build on a device/emulator, then run `npm run start:dev` and open the dev client (not Expo Go). |
+
+Default script is **`npm start`** (`expo start`), which does **not** force Expo Go. Use **`npm run start:go`** only if you intentionally want the Expo Go app; expect limited functionality for this repo.
+
+## Troubleshooting
+
+- **“Cannot find native module” / crash on launch in Expo Go** — Expected if anything still imported `react-native-purchases` at the top level. This repo avoids that in Expo Go; use `npm start` or `npm run start:dev` with a **development build**. If you still use Expo Go, pull the latest changes and avoid `expo start --go` as the only workflow.
+- **Paywall is empty or errors** — Ensure `.env` has valid RevenueCat public keys and store products are linked to your entitlement in the RevenueCat dashboard.
+- **Stuck on paywall in a dev build** — Confirm sandbox testers / license testers and that the entitlement id matches `src/constants/subscription.ts`.
 
 ## Quick start
 
