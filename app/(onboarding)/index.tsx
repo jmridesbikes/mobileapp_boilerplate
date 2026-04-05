@@ -1,19 +1,21 @@
 import { Link } from 'expo-router';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet } from 'react-native';
 
-import { Text as ThemedText, View as ThemedView } from '@/components/Themed';
+import { Text, View, useThemeColor } from '@/src/components/Themed';
 
 export default function OnboardingStepOne() {
+  const primaryColor = useThemeColor({}, 'primary');
+
   return (
-    <ThemedView style={styles.container}>
-      <ThemedText style={styles.title}>Welcome</ThemedText>
-      <ThemedText style={styles.subtitle}>Short intro screen for your product.</ThemedText>
+    <View style={styles.container}>
+      <Text style={styles.title}>Welcome</Text>
+      <Text style={styles.subtitle}>Short intro screen for your product.</Text>
       <Link href="/(onboarding)/step-two" asChild>
-        <Pressable style={styles.button}>
-          <Text style={styles.buttonLabel}>Next</Text>
+        <Pressable style={StyleSheet.flatten([styles.button, { backgroundColor: primaryColor }])}>
+          <Text lightColor="#fff" darkColor="#fff" style={styles.buttonLabel}>Next</Text>
         </Pressable>
       </Link>
-    </ThemedView>
+    </View>
   );
 }
 
@@ -24,10 +26,9 @@ const styles = StyleSheet.create({
   button: {
     marginTop: 24,
     alignSelf: 'flex-start',
-    backgroundColor: '#6366f1',
     paddingVertical: 14,
     paddingHorizontal: 24,
     borderRadius: 10,
   },
-  buttonLabel: { color: '#fff', fontWeight: '600', fontSize: 16 },
+  buttonLabel: { fontWeight: '600', fontSize: 16 },
 });

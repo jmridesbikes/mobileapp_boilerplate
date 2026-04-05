@@ -1,13 +1,15 @@
 import Constants from 'expo-constants';
 import { useRouter } from 'expo-router';
-import { Linking, Pressable, ScrollView, StyleSheet, Text } from 'react-native';
+import { Linking, Pressable, ScrollView, StyleSheet } from 'react-native';
 
-import { SettingsSubscriptionSection } from '@/components/SettingsSubscriptionSection';
+import { Text, View, useThemeColor } from '@/src/components/Themed';
+import { SettingsSubscriptionSection } from '@/src/components/SettingsSubscriptionSection';
 import { useOnboardingStatus } from '@/src/hooks/useOnboardingStatus';
 
 export default function SettingsScreen() {
   const router = useRouter();
   const { resetOnboarding } = useOnboardingStatus();
+  const linkColor = useThemeColor({}, 'primary');
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -19,15 +21,16 @@ export default function SettingsScreen() {
       {__DEV__ ? (
         <>
           <Text style={styles.section}>Development</Text>
-          <Pressable
-            style={styles.buttonSecondary}
-            onPress={async () => {
-              await resetOnboarding();
-              router.replace('/');
-            }}
-          >
-            <Text style={styles.buttonSecondaryLabel}>Reset onboarding flag</Text>
-          </Pressable>
+          <View style={styles.buttonSecondary}>
+            <Pressable
+              onPress={async () => {
+                await resetOnboarding();
+                router.replace('/');
+              }}
+            >
+              <Text style={styles.buttonSecondaryLabel}>Reset onboarding flag</Text>
+            </Pressable>
+          </View>
         </>
       ) : null}
 
@@ -35,13 +38,13 @@ export default function SettingsScreen() {
         style={styles.link}
         onPress={() => Linking.openURL('https://example.com/terms')}
       >
-        <Text style={styles.linkText}>Terms of service</Text>
+        <Text style={[styles.linkText, { color: linkColor }]}>Terms of service</Text>
       </Pressable>
       <Pressable
         style={styles.link}
         onPress={() => Linking.openURL('https://example.com/privacy')}
       >
-        <Text style={styles.linkText}>Privacy policy</Text>
+        <Text style={[styles.linkText, { color: linkColor }]}>Privacy policy</Text>
       </Pressable>
     </ScrollView>
   );
@@ -61,5 +64,5 @@ const styles = StyleSheet.create({
   },
   buttonSecondaryLabel: { fontWeight: '600', fontSize: 16 },
   link: { paddingVertical: 8 },
-  linkText: { color: '#6366f1', fontSize: 16 },
+  linkText: { fontSize: 16 },
 });

@@ -7,6 +7,8 @@ import RevenueCatUI from 'react-native-purchases-ui';
 import { ENTITLEMENT_ID } from '@/src/constants/subscription';
 import { useCustomerInfo } from '@/src/hooks/useCustomerInfo';
 import { restorePurchases } from '@/src/lib/purchases';
+import Colors from '@/src/constants/colors';
+import { useColorScheme } from '@/src/hooks/useColorScheme';
 
 function subscriptionManagementUrl(): string {
   if (Platform.OS === 'ios') {
@@ -19,6 +21,7 @@ export function SettingsSubscriptionSection() {
   const router = useRouter();
   const { customerInfo, hasEntitlement } = useCustomerInfo();
   const [busy, setBusy] = useState(false);
+  const colorScheme = useColorScheme() ?? 'light';
 
   const entitlement = customerInfo?.entitlements.active[ENTITLEMENT_ID];
   const statusLabel = (() => {
@@ -52,6 +55,8 @@ export function SettingsSubscriptionSection() {
     }
   }, []);
 
+  const primaryColor = Colors[colorScheme].primary;
+
   return (
     <>
       <Text style={styles.section}>Subscription</Text>
@@ -61,7 +66,7 @@ export function SettingsSubscriptionSection() {
       ) : null}
 
       <Pressable
-        style={[styles.button, busy && styles.buttonDisabled]}
+        style={[styles.button, { backgroundColor: primaryColor }, busy && styles.buttonDisabled]}
         onPress={onRestore}
         disabled={busy}
       >
@@ -81,7 +86,6 @@ const styles = StyleSheet.create({
   rowMuted: { fontSize: 14, opacity: 0.75 },
   button: {
     marginTop: 8,
-    backgroundColor: '#6366f1',
     paddingVertical: 14,
     paddingHorizontal: 18,
     borderRadius: 10,

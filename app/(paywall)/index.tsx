@@ -1,4 +1,4 @@
-import { PaywallContent } from '@/components/PaywallContent';
+import { PaywallContent } from '@/src/components/PaywallContent';
 
 export default function PaywallScreen() {
   return <PaywallContent />;

@@ -1,15 +1,18 @@
 import { Tabs } from 'expo-router';
+import { SymbolView } from 'expo-symbols';
 
-import Colors from '@/constants/Colors';
-import { useColorScheme } from '@/components/useColorScheme';
+import Colors from '@/src/constants/colors';
+import { useColorScheme } from '@/src/hooks/useColorScheme';
 
 export default function AppLayout() {
-  const colorScheme = useColorScheme();
+  const colorScheme = useColorScheme() ?? 'light';
+  const activeTint = Colors[colorScheme].tint;
+  const inactiveTint = Colors[colorScheme].tabIconDefault;
 
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
+        tabBarActiveTintColor: activeTint,
         headerShown: true,
       }}
     >
@@ -18,6 +21,14 @@ export default function AppLayout() {
         options={{
           title: 'Home',
           tabBarLabel: 'Home',
+          tabBarIcon: ({ focused }) => (
+            <SymbolView
+              name="house.fill"
+              tintColor={focused ? activeTint : inactiveTint}
+              type="hierarchical"
+              size={24}
+            />
+          ),
         }}
       />
       <Tabs.Screen
@@ -25,6 +36,14 @@ export default function AppLayout() {
         options={{
           title: 'Settings',
           tabBarLabel: 'Settings',
+          tabBarIcon: ({ focused }) => (
+            <SymbolView
+              name="gearshape.fill"
+              tintColor={focused ? activeTint : inactiveTint}
+              type="hierarchical"
+              size={24}
+            />
+          ),
         }}
       />
     </Tabs>
