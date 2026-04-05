@@ -1,6 +1,6 @@
 import { StyleSheet, Text, View } from 'react-native';
 
-/** In-app purchases are not available in the browser; use a development build on a device or emulator. */
+/** In-app purchases are not available in the browser; use a native build on a device or emulator. */
 export function PaywallContent() {
   return (
     <View style={styles.box}>

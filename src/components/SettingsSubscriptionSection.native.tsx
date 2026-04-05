@@ -62,7 +62,7 @@ export function SettingsSubscriptionSection() {
       <>
         <Text style={styles.section}>Subscription</Text>
         <Text style={styles.row}>
-          Running in Expo Go: in-app purchases and RevenueCat are disabled. Use a development build to test IAP (for example
+          Running in Expo Go: in-app purchases and RevenueCat are disabled. Use a native build to test IAP (for example
           npm run run:android or eas build --profile development).
         </Text>
       </>

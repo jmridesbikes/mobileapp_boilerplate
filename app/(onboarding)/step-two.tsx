@@ -17,7 +17,7 @@ export default function OnboardingStepTwo() {
         style={[styles.button, { backgroundColor: primaryColor }]}
         onPress={async () => {
           await completeOnboarding();
-          router.replace('/');
+          router.replace('/(paywall)');
         }}
       >
         <Text lightColor="#fff" darkColor="#fff" style={styles.buttonLabel}>Get started</Text>
