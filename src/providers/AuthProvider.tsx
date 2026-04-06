@@ -1,7 +1,9 @@
-import React, { createContext, useCallback, useContext, useMemo, useState } from 'react';
+import type { Session } from '@supabase/supabase-js';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
 import { env } from '@/src/config/env';
 import type { AuthMode } from '@/src/config/env';
+import { getSupabase } from '@/src/lib/supabase';
 
 export type AuthUser = { id: string; email?: string };
 
@@ -10,10 +12,9 @@ export type AuthState = {
   isReady: boolean;
   isAuthenticated: boolean;
   user: AuthUser | null;
-  /** Placeholder until you wire Supabase/Clerk/etc. */
-  signOut: () => void;
+  signOut: () => Promise<void>;
   /**
-   * Dev-only bypass for `authMode === 'required'` so you can reach the app without a backend.
+   * Dev-only bypass for `authMode === 'required'` when Supabase is not configured or for quick local testing.
    * No-op when `authMode === 'none'`.
    */
   signInDevBypass: () => void;
@@ -21,13 +22,58 @@ export type AuthState = {
 
 const AuthContext = createContext<AuthState | null>(null);
 
+function mapUser(session: Session | null): AuthUser | null {
+  const u = session?.user;
+  if (!u) return null;
+  return { id: u.id, email: u.email ?? undefined };
+}
+
 /**
- * Default: `EXPO_PUBLIC_AUTH_MODE=none` — no login screens. Set `required` to show placeholder auth routes.
+ * Default: `EXPO_PUBLIC_AUTH_MODE=none` — no login screens. Set `required` for Supabase OAuth (see app/(auth)/login).
  */
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
+  const [isReady, setIsReady] = useState(env.authMode === 'none');
 
-  const signOut = useCallback(() => {
+  useEffect(() => {
+    if (env.authMode === 'none') {
+      return;
+    }
+
+    const supabase = getSupabase();
+    if (!supabase) {
+      setUser(null);
+      setIsReady(true);
+      return;
+    }
+
+    let cancelled = false;
+
+    (async () => {
+      const { data } = await supabase.auth.getSession();
+      if (!cancelled) {
+        setUser(mapUser(data.session));
+        setIsReady(true);
+      }
+    })();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!cancelled) setUser(mapUser(session));
+    });
+
+    return () => {
+      cancelled = true;
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  const signOut = useCallback(async () => {
+    const supabase = getSupabase();
+    if (supabase) {
+      await supabase.auth.signOut();
+    }
     setUser(null);
   }, []);
 
@@ -43,20 +89,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         isReady: true,
         isAuthenticated: true,
         user: null,
-        signOut,
+        signOut: async () => {},
         signInDevBypass,
       };
     }
 
     return {
       authMode: 'required',
-      isReady: true,
+      isReady,
       isAuthenticated: user != null,
       user,
       signOut,
       signInDevBypass,
     };
-  }, [user, signOut, signInDevBypass]);
+  }, [user, isReady, signOut, signInDevBypass]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

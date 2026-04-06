@@ -29,7 +29,7 @@ Useful scripts: `npm run typecheck`, `npm run lint`, `npm run prebuild`, `npm ru
 
 ## Flow
 
-Root [`app/index.tsx`](app/index.tsx): **optional auth** → **onboarding** → **optional paywall** (RevenueCat only) → **main tabs**.
+Root [`app/index.tsx`](app/index.tsx): **onboarding** → **optional auth** → **optional paywall** (RevenueCat only) → **main tabs**.
 
 ## RevenueCat / native IAP (optional)
 

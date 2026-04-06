@@ -1,6 +1,7 @@
 import React, { createContext, useContext } from 'react';
 
 import { env } from '@/src/config/env';
+import { RevenueCatIdentityBridge } from '@/src/integrations/revenuecat/RevenueCatIdentityBridge';
 import {
   RevenueCatSubscriptionProvider,
   useRevenueCatSubscriptionContext,
@@ -27,6 +28,7 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
   if (env.subscriptionMode === 'revenuecat') {
     return (
       <RevenueCatSubscriptionProvider>
+        <RevenueCatIdentityBridge />
         <RevenueCatBridge>{children}</RevenueCatBridge>
       </RevenueCatSubscriptionProvider>
     );

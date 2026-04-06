@@ -2,25 +2,46 @@ import { useRouter } from 'expo-router';
 import { Pressable, StyleSheet } from 'react-native';
 
 import { Text, View, useThemeColor } from '@/src/components/Themed';
-import { useOnboardingStatus } from '@/src/hooks/useOnboardingStatus';
+import { env } from '@/src/config/env';
 
 export default function OnboardingStepTwo() {
   const router = useRouter();
-  const { completeOnboarding } = useOnboardingStatus();
   const primaryColor = useThemeColor({}, 'primary');
+
+  const goToRevenueCatStep = () => {
+    router.replace('/(onboarding)/revenuecat');
+  };
+
+  if (env.authMode === 'none') {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.title}>You are almost there</Text>
+        <Text style={styles.subtitle}>
+          Tap below to continue to the subscription step, then into the app (or paywall if RevenueCat mode is enabled).
+        </Text>
+        <Pressable style={[styles.button, { backgroundColor: primaryColor }]} onPress={goToRevenueCatStep}>
+          <Text lightColor="#fff" darkColor="#fff" style={styles.buttonLabel}>
+            Get started
+          </Text>
+        </Pressable>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>You are almost there</Text>
-      <Text style={styles.subtitle}>Tap below to finish onboarding. The root gate then sends you to the main app (or paywall if RevenueCat mode is enabled).</Text>
+      <Text style={styles.subtitle}>
+        Tap below to sign in with Google or Apple, then you&apos;ll continue to the subscription step before the main
+        app.
+      </Text>
       <Pressable
         style={[styles.button, { backgroundColor: primaryColor }]}
-        onPress={async () => {
-          await completeOnboarding();
-          router.replace('/');
-        }}
+        onPress={() => router.replace('/(onboarding)/sso')}
       >
-        <Text lightColor="#fff" darkColor="#fff" style={styles.buttonLabel}>Get started</Text>
+        <Text lightColor="#fff" darkColor="#fff" style={styles.buttonLabel}>
+          Get started
+        </Text>
       </Pressable>
     </View>
   );

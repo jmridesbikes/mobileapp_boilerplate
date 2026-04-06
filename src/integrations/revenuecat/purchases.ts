@@ -101,3 +101,27 @@ export function subscribeCustomerInfo(listener: CustomerInfoListener): () => voi
     Purchases.removeCustomerInfoUpdateListener(listener);
   };
 }
+
+/** Links RevenueCat customer to your app user (e.g. Supabase `auth.users.id`). No-ops on web / Expo Go. */
+export async function purchasesLogIn(appUserId: string): Promise<void> {
+  if (Platform.OS === 'web' || isExpoGo()) return;
+  const mod = getPurchasesModule();
+  if (!mod) return;
+  try {
+    await mod.default.logIn(appUserId);
+  } catch (e) {
+    console.warn('[revenuecat] purchasesLogIn failed', e);
+  }
+}
+
+/** Clears the RevenueCat user identity (call after Supabase sign-out). No-ops on web / Expo Go. */
+export async function purchasesLogOut(): Promise<void> {
+  if (Platform.OS === 'web' || isExpoGo()) return;
+  const mod = getPurchasesModule();
+  if (!mod) return;
+  try {
+    await mod.default.logOut();
+  } catch (e) {
+    console.warn('[revenuecat] purchasesLogOut failed', e);
+  }
+}

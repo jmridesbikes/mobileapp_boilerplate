@@ -12,7 +12,9 @@ export default function OnboardingStepOne() {
       <Text style={styles.subtitle}>Short intro screen for your product.</Text>
       <Link href="/(onboarding)/step-two" asChild>
         <Pressable style={StyleSheet.flatten([styles.button, { backgroundColor: primaryColor }])}>
-          <Text lightColor="#fff" darkColor="#fff" style={styles.buttonLabel}>Next</Text>
+          <Text lightColor="#fff" darkColor="#fff" style={styles.buttonLabel}>
+            Next
+          </Text>
         </Pressable>
       </Link>
     </View>
